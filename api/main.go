@@ -4,6 +4,7 @@ import (
 	"beyond/internal/controllers"
 	"beyond/internal/infra/database"
 	"beyond/internal/middlewares"
+	"beyond/internal/services"
 	"log"
 	"net/http"
 
@@ -18,6 +19,9 @@ func main() {
 	}
 
 	database.Connect()
+	database.InitRedis()
+
+	go services.StartProcessor()
 
 	router := gin.Default()
 
@@ -36,5 +40,10 @@ func main() {
 		})
 	}
 
+	produtos := router.Group("/produtos")
+	produtos.Use(middlewares.AuthMiddleware())
+	{
+		produtos.POST("/monitorar", controllers.CreateProductMonitor)
+	}
 	router.Run(":8080")
 }
